@@ -1,0 +1,53 @@
+<hr />
+
+<ul class="nav nav-pills">
+    <li id="vcalendario"><a href="#">Programación</a></li>
+</ul>
+
+<div id="calendario" title="Calendario">    
+	hola
+</div>
+
+<script>
+  $(function() {
+    $( "#calendario" ).dialog({
+      autoOpen: false,
+      height: 700,
+      width: 900,      
+      show: {
+        effect: "blind",
+        duration: 1000
+      },
+      hide: {
+        effect: "explode",
+        duration: 1000
+      },
+      buttons: {
+          "Agregar estudio realizado": function() {          
+           var id      = $("#id").val();
+           var idNest  = $("#idNest2").val();
+           var inst    = $("#comenN").val();
+           var titulo  = $("#comenN2").val();
+                      
+           if($("#comenN").val().length < 1) {  
+              alert("Debe escribir el nombre de la institución");  
+              return false;  
+            }  
+
+           if($("#comenN2").val().length < 1) {  
+              alert("Debe escribir el titulo obtenido");  
+              return false;  
+            }  
+            $( "#formGuaradarE" ).submit();          
+ 
+          },
+          Cancel: function() {
+          $( this ).dialog( "close" );          
+        }
+      }
+    });  
+    $( "#vcalendario" ).click(function() {
+      $( "#calendario" ).dialog( "open" );
+    });
+  });
+</script>

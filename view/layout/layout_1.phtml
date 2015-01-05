@@ -1,0 +1,226 @@
+
+<?php echo $this->doctype(); ?>
+<html lang="en">
+<head>
+ <meta charset="utf-8" />
+ <title>Nissi web 1.0</title>
+ <meta name="description" content="" />
+ <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+ <!-- STILOS ********************************************************************************************** -->
+ <link href="<?php echo $this->basePath()."/" ?>assets/css/bootstrap.min.css" rel="stylesheet" />
+ <link href="<?php echo $this->basePath()."/" ?>assets/css/bootstrap-responsive.min.css" rel="stylesheet" />
+ <!-- estilo de letras -->
+ <link rel="stylesheet" href="<?php echo $this->basePath()."/" ?>assets/css/font-awesome.min.css" />
+ <!-- ace styles -->
+ 
+ <link rel="stylesheet" href="<?php echo $this->basePath()."/" ?>assets/css/ace-responsive.min.css" />
+ <link rel="stylesheet" href="<?php echo $this->basePath()."/" ?>assets/css/ace-skins.min.css" />
+                
+ <link rel="stylesheet" href="<?php echo $this->basePath()."/" ?>assets/css/chosen.css" />  
+ <!-- Jquery --> 
+ <link rel="stylesheet" href="<?php echo $this->basePath()."/" ?>assets/css/jquery-ui.css" />
+ 
+ <link rel="stylesheet" href="<?php echo $this->basePath()."/" ?>assets/css/ace-rtl.min.css" />
+ 
+ <link rel="stylesheet" href="<?php echo $this->basePath()."/" ?>assets/css/ace.min2.css" />
+ 
+ <link rel="stylesheet" href="<?php echo $this->basePath()."/" ?>assets/css/ace.min.css" />
+
+</head>
+<body>
+<div class="navbar navbar-inverse">
+ <div class="navbar-inner">
+   <div class="container-fluid">
+     <a class="brand" href="#"><small><i class="icon-leaf"></i> Nissi web 1.0</small> </a>
+       <ul class="nav ace-nav pull-right">
+            <!--  Menu de navegacion opciones de alertas, ets -->
+            <?php //echo $this->render('layout/menu_nav') ?>
+            
+            
+            
+          <li class="light-blue user-profile">
+	    <a class="user-menu dropdown-toggle" href="#" data-toggle="dropdown">
+	      <img alt="Jason's Photo" src="<?php echo $this->basePath()."/" ?>assets/avatars/user.jpg" class="nav-user-photo" />
+ 		<span id="user_info"> 
+		  <small>Bienvenido,</small> 
+                  
+                  <?php // view helper
+    if ($user = $this->identity()) {
+       echo $this->escapeHtml($user->usr_name);}
+    ?>
+                  
+	        </span>
+	        <i class="icon-caret-down"></i>
+	    </a>
+	    <ul id="user_menu" class="pull-right dropdown-menu dropdown-yellow dropdown-caret dropdown-closer">
+	      <li><a href="<?php echo $this->basePath() ?>/auth/index/logout"><i class="icon-off"></i> Cerrar sesion</a></li>
+	    </ul>
+	   </li>
+       </ul><!--/.ace-nav-->
+   </div><!--/.container-fluid-->
+ </div><!--/.navbar-inner-->
+</div><!--/.navbar-->
+
+<div class="container-fluid" id="main-container">
+  <a href="#" id="menu-toggler"><span></span></a><!-- menu toggler -->
+  <div id="sidebar">
+    <?php echo $this->render('layout/admin') ?>
+     <div class="main-container" id="main-container">
+	<div class="main-container-inner">
+	 <div class="sidebar" id="sidebar">
+           <?php //echo $this->render('layout/menu') ?>  
+             <div class="nav-collapse" id = "recorrer_menu">
+                 <?php  //echo $this->render('layout/menu') ?>  
+<?php echo $this->navigation('Navigation')->menu()->setUlClass('nav nav-list2');?>               
+
+       
+</div>             
+           <div id="sidebar-collapse"><i class="icon-double-angle-left"></i></div>
+           </div><!--/#sidebar-->
+           </div>
+        </div>
+     </div>    
+  <div id="main-content" class="clearfix">
+  <!-- Muestra de fecha actual en el sistema -->  					
+      <div id="breadcrumbs">
+	<ul class="breadcrumb">
+	    <!-- <li><i class="icon-home"></i> <a href="#">Home</a><span class="divider"><i class="icon-angle-right"></i></span></li>
+            <li> 
+                
+            </li> -->
+	</ul><!--.breadcrumb-->
+        
+        <div id="nav-search">
+	    <form class="form-search">
+                <?php 
+                $date   = new \DateTime(); 
+                $fecSis = $date->format('Y-m-d');        
+                ?>
+	        <span class="input-icon">                    
+                    Fecha del sistema
+                    <input type="text" class="input-small search-query" id="fechaSis" name="fechaSis" readonly="readonly" value="<?php echo $fecSis ;?>"/>
+		</span>
+	    </form>
+	</div><!--#nav-search-->
+    </div><!--#breadcrumbs-->
+
+      
+    <div id="page-content" class="clearfix">
+      <div class="row-fluid">
+        <!-- PAGE CONTENT BEGINS HERE -->
+        <!-- <script src="<?php echo $this->basePath()."/" ?>assets/js/jquery.js"></script> -->
+
+        
+        <script src="<?php echo $this->basePath()."/" ?>assets/js/jquery-1.9.1.js"></script>
+        <script src="<?php echo $this->basePath()."/" ?>assets/js/jquery-ui.js"></script>
+
+        <script src="<?php echo $this->basePath()."/" ?>assets/js/jquery-ui-1.10.2.custom.min.js"></script>       
+        
+
+<!-- Busquedas incrementales en select (No mover de aquil depende de ac.min.js) -->
+<script type="text/javascript">
+  $(function(){
+    $(".chzn-select").chosen(); 
+    $(".chzn-select-deselect").chosen({allow_single_deselect:true});     
+  });  
+</script>      
+          <div class="container">                         
+
+<?php
+// Declaracion general para los mensajes de guardado en todas las vistas
+$children = $this->viewModel()
+                 ->getCurrent()
+                 ->getChildren();
+ 
+$ourView  = $children[0];
+ 
+if (isset($ourView->flashMessages) && count($ourView->flashMessages)) : ?>
+
+    <?php foreach ($ourView->flashMessages as $fMessage) : ?>
+    
+<div id="dialog"></div>
+<div class="alert alert-block alert-success" id="mensajeGuarddado">
+ <p>
+  <strong><i class="icon-ok" ></i> Registro 
+  guardado de forma correcta !</strong>
+ </p>
+</div>
+
+<script type="text/javascript">
+        $(document).ready(function(){
+            setTimeout(function(){ $("#mensajeGuarddado").fadeOut(500).fadeIn(300).fadeOut(500).fadeIn(500).fadeOut(300);}, 700);  
+        });
+</script>    
+    
+    <?php endforeach; ?>
+
+<?php endif; 
+// Fin declaracion de mensajes echo $fMessage; 
+?>              
+              
+              
+              <?php echo $this->content; ?>
+          </div> <!-- /container -->
+          <!-- PAGE CONTENT ENDS HERE -->
+       </div><!--/row-->
+    </div><!--/#page-content-->
+					  
+    <div id="ace-settings-container">
+      <div class="btn btn-app btn-mini btn-warning" id="ace-settings-btn">
+	<i class="icon-cog"></i>
+      </div>
+      <div id="ace-settings-box">
+        <div>
+           <div class="pull-left">
+             <select id="skin-colorpicker" class="hidden">
+   	       <option data-class="default" value="#438EB9">#438EB9</option> 
+	       <option data-class="skin-1" value="#222A2D">#222A2D</option>
+	       <option data-class="skin-2" value="#C6487E">#C6487E</option>
+  	       <option data-class="skin-3" value="#D0D0D0">#D0D0D0</option>
+             </select>
+           </div>
+           <span>Skin</span>
+        </div>
+        <div><input type="checkbox" class="ace-checkbox-2" id="ace-settings-header" /><label class="lbl" for="ace-settings-header"> Fixed Header</label></div>
+        <div><input type="checkbox" class="ace-checkbox-2" id="ace-settings-sidebar" /><label class="lbl" for="ace-settings-sidebar"> Fixed Sidebar</label></div>
+       </div><!--/#ace-settings-box-->
+    </div><!--/#ace-settings-container-->
+  </div><!-- #main-content -->
+</div><!--/.fluid-container#main-container-->
+
+<a href="#" id="btn-scroll-up" class="btn btn-small btn-inverse">
+  <i class="icon-double-angle-up icon-only"></i>
+</a>
+
+<!-- SCRIPT JS -->
+
+<script type="text/javascript">
+  window.jQuery || document.write("<script src='<?php echo $this->basePath()."/" ?>assets/js/jquery-1.9.1.min.js'>\x3C/script>");
+</script>
+		
+<script src="<?php echo $this->basePath()."/" ?>assets/js/bootstrap.min.js"></script>
+<script src="<?php echo $this->basePath()."/" ?>assets/js/bootbox.min.js"></script>
+
+<!-- ace scripts -->
+<script src="<?php echo $this->basePath()."/" ?>assets/js/ace-elements.min.js"></script>
+
+<script src="<?php echo $this->basePath()."/" ?>assets/js/ace.min.js"></script>
+
+<script src="<?php echo $this->basePath()."/" ?>assets/js/ace.min2.js"></script>
+
+<script src="<?php echo $this->basePath()."/" ?>assets/js/chosen.jquery.min.js"></script>
+<script src="<?php echo $this->basePath()."/" ?>assets/js/fuelux.spinner.js"></script>
+
+<script src="<?php echo $this->basePath()."/" ?>assets/js/jquery.dataTables.min.js"></script>
+<script src="<?php echo $this->basePath()."/" ?>assets/js/jquery.dataTables.bootstrap.js"></script>                
+
+<!-- CHEditor --> 
+<script src="<?php echo $this->basePath()."/" ?>ckeditor/ckeditor.js"></script> 
+
+<!-- Formato numero -->
+<script src="<?php echo $this->basePath()."/" ?>js/numeros/jquery.number.js"></script> 
+</body>
+</html>
+
+

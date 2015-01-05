@@ -1,0 +1,25 @@
+<?php 
+$hab=1;
+if ( isset($daPer['modificar']) ){ // Si existe se compara permiso en base de datos
+   $hab = $daPer['modificar'];
+ } ?>
+<?php 
+if ($hab==1) // Verificar si tienes permisos para este modulo
+{ 
+   $idEli = 'b'; 
+   if (isset($this->idEli)) 
+       $idEli = $this->idEli; 
+    ?>	
+  <img src="<?php echo $this->basePath()."/" ?>img/delete.png" id='<?php echo $idEli; ?>' class='eliminar' title='Eliminar este registro' width="16" height="16" />
+<?php } ?>  
+<script>
+$(function (){
+   $('#<?php echo $idEli ?>').click(function(){    
+       var id = $(this).attr('id');
+       if (!confirm("¿ Esta seguro desea eliminar este registro ?"))
+       {
+           return false;
+       }       
+   }); 
+})  
+</script>
