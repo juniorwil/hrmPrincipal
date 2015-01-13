@@ -398,8 +398,54 @@ class ValFormulario implements InputFilterAwareInterface
                       ),
                     ),
                 ))
-            );                  
-                                                      
+            );                                                                       
+            // Empleado
+            $inputFilter->add(
+                $factory->createInput(array(
+                    'name'     => 'idEmp',
+                    'required' => true,
+                    'filters'  => array(
+                        array('name' => 'StripTags'),
+                        array('name' => 'StringTrim'),
+                    ),
+                    'validators' => array(
+                        array(
+                            'name'    => 'Digits',
+                            'options' => array(
+                                'encoding' => 'UTF-8',
+                                'min'      => '1',
+                            ),
+                        ),
+                        array ( 
+                          'name' => 'digits', 
+                        ),                         
+                    ),
+                ))
+            );
+            // Tipo de incapacidad
+            $inputFilter->add(
+                $factory->createInput(array(
+                    'name'     => 'idInc',
+                    'required' => true,
+                    'filters'  => array(
+                        array('name' => 'StripTags'),
+                        array('name' => 'StringTrim'),
+                    ),
+                    'validators' => array(
+                        array(
+                            'name'    => 'Digits',
+                            'options' => array(
+                                'encoding' => 'UTF-8',
+                                'min'      => '1',
+                            ),
+                        ),
+                        array ( 
+                          'name' => 'digits', 
+                        ),                         
+                    ),
+                ))
+            );
+
 
             $inputFilter->add(
                 $factory->createInput(array(

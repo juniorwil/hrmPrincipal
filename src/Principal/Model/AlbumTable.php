@@ -1223,5 +1223,12 @@ where a.estado=2 and e.idProc=6 and b.idEmp=".$idEmp ,Adapter::QUERY_MODE_EXECUT
       $datos=$result->toArray();
       return $datos;
    }                      
+   // Codigos de enfermedades
+   public function getCodEnf($con)
+   {
+      $result=$this->adapter->query("select * from n_cod_enf ".$con ,Adapter::QUERY_MODE_EXECUTE);
+      $datos=$result->toArray();
+      return $datos;
+   }                         
 }
 

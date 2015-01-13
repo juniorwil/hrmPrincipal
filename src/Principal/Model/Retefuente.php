@@ -51,7 +51,7 @@ class Retefuente extends AbstractTableGateway
 	  $tipo       = $datos['tipo']; // Tipo de retencion 	
 	
    	  // 1. TOTAL DEVENGADOS ( CONCEPTOS QUE HACEN PARTE DE LA RETENCION EN LA FUENTE)
-      $result=$this->adapter->query("Select ( sum(a.devengado) - sum(a.deducido) ) as valor  
+      $result=$this->adapter->query("Select ( sum(a.devengado) - sum(a.deducido) ) as valor, a.idNom   
             from  n_nomina_e_d a 
                inner join n_conceptos b on a.idConc=b.id 
                inner join n_conceptos_pr c on c.idConc=b.id 
@@ -62,6 +62,7 @@ class Retefuente extends AbstractTableGateway
                  a.idInom = ".$id ,Adapter::QUERY_MODE_EXECUTE);  
       $datos = $result->current();
 	  $totIngresosBases = $datos['valor'];
+    $idNom = $datos['idNom'];
 	  
 	  echo 'Inregsos: '.number_format($totIngresosBases).'<br />';
 	  
@@ -121,7 +122,7 @@ class Retefuente extends AbstractTableGateway
 	  echo 'Total deducciones: '.number_format($totDeducciones).'<br />';
 	  echo 'Porcenta: '.number_format($porcentaje).'<br />';
 	  
-	  $red = 3;
+	  $red = 3; // redondeo de decimanles
 	  
 	  // Calulos de pie
 	  $baseGravableBruta = $totIngresosBases - $totExentas -  ( $totDeducciones + $promSalud ) ;
@@ -129,7 +130,7 @@ class Retefuente extends AbstractTableGateway
 	  echo 'baseGravableBruta:  '.number_format($baseGravableBruta, $red).'<br />';
 	  
 	  $pn = new Paranomina($this->adapter);
-      $dp = $pn->getGeneral1(4); // Funcion para traer parametros de nomina
+      $dp = $pn->getGeneral1(10); // Funcion para traer parametros de nomina
       $uvt = $dp['valorNum'];// Uvt
               	  
 	  // Validar si el 25% excede 240 UVT
@@ -156,6 +157,7 @@ class Retefuente extends AbstractTableGateway
 	  
 	  // CALCULOS PARA CALCULO DE LA RENTECION PARA 384 ---------------------------------------------------------
 	  $baseGravableNeta = ( $totIngresosBases - $totPen ) / $uvt ;
+    $baseGravableNeta384 = ( $totIngresosBases - $totPen ) / $uvt ;
     	  
 	  echo 'baseGravableNeta 384: '.number_format($baseGravableNeta,$red).'<br />';
 	  		  
@@ -178,7 +180,7 @@ class Retefuente extends AbstractTableGateway
 	  // Retornar valor final - proc 1
 	  $por = round( ( $baseGravableNeta383 / $uvt ), 0 );
 	  
-	  echo 'por :  '.$por.'<br />';
+	  echo 'base 383 / UVT :  '.$por.'<br />';
 	  
       $result=$this->adapter->query("select
         case when ( ".$por." >= desde and ".$por." < hasta ) then ## Caso 1
@@ -203,6 +205,15 @@ class Retefuente extends AbstractTableGateway
 	  
 	  echo 'valorProce1:  '.number_format( $valorProce1 ).'<br />';	  
 	  
+    // Guardar valores de la retencion en la fuente
+    $result=$this->adapter->query("insert into n_nomina_e_rete (idNom, idEmp, vlrIngresos, vlrExcentas, vlrPension, vlrTotalDed, 
+      porcentaje, baseGravableBruta, rentaExenta, baseGravableNeta_383, reteArt_383, baseGravableNeta_384, reteArt_384, valorProce2,
+      numerUvt, valorProce1, uvtActual ) values(".$idNom.", ".$idEmp.", ".$totIngresosBases.", ".$totExentas.", ".$totPen.",
+       ".$totDeducciones.", ".$porcentaje.", ".$baseGravableBruta.", ".$rentaExenta.", ".$baseGravableNeta383.", ".$reteArt383."
+       , ".$baseGravableNeta384.", ".$reteArt384.", ".$valorProce2.", ".$por.", ".$valorProce1.", ".$uvt." )" ,Adapter::QUERY_MODE_EXECUTE);      
+    // Fin -----
+
+    
 	  if ($tipo==2)
          return $valorProce2;
       else

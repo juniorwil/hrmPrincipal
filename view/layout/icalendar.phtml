@@ -1,12 +1,41 @@
-<hr />
-
 <ul class="nav nav-pills">
-    <li id="vcalendario"><a href="#">Programación</a></li>
+    <li id="prog<?php echo $this->idE ?>"><a href="#">Programación</a></li>
 </ul>
 
+<script>
+$(function () {
+  $("#prog<?php echo $this->idE ?>").click(function () {  
+        var b = <?php echo $this->idE ?>;
+        var parametros = {
+            "id"  : b,                
+        };            
+        // Validar que no genere 2 veces la misma nomina         
+        $.ajax({
+            data:  parametros,
+            url:   '<?php echo $this->basePath() ?>/talentohumano/programa/listp',
+            type:  'post',
+            beforeSend: function () {
+                $("#resultadoP").html('<h3 class="header smaller lighter grey"><i class="icon-spinner icon-spin orange bigger-125"></i></h3>Buscando programaciones, por favor espere...');
+            },
+            success:  function (response) {
+//                alert('Nomina generada de forma correcta');
+                $("#resultadoP").html(response);
+                $( "#calendario" ).dialog( "open" );
+                //location.href='<?php echo $this->basePath() ?><?php echo $this->lin?>';                    
+            }            
+
+        }); // Ajax envio de datos       
+
+      });// Generacion de nomina
+  })
+</script>
+
+
 <div id="calendario" title="Calendario">    
-	hola
+	<div id="resultadoP"></div>
 </div>
+
+
 
 <script>
   $(function() {
@@ -46,8 +75,6 @@
         }
       }
     });  
-    $( "#vcalendario" ).click(function() {
-      $( "#calendario" ).dialog( "open" );
-    });
+
   });
 </script>
