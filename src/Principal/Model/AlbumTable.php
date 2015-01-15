@@ -1051,8 +1051,10 @@ where a.estado=2 and e.idProc=6 and b.idEmp=".$idEmp ,Adapter::QUERY_MODE_EXECUT
    // Hojas de vidas para excel
    public function getPresCuotas($id, $idPres)
    {
-      $result=$this->adapter->query("select distinct  a.idTnom , b.nombre as nomTnom, c.valor, c.cuotas, c.valCuota   
-                                    from n_tip_prestamo_tn a inner join n_tip_nom b on b.id = a.idTnom
+      $result=$this->adapter->query("select distinct  a.idTnom , b.nombre as nomTnom, c.valor, c.cuotas, c.valCuota,
+                                    c.saldoIni + c.pagado as pagado    
+                                    from n_tip_prestamo_tn a 
+                                    inner join n_tip_nom b on b.id = a.idTnom
                                     left join n_prestamos_tn c on c.idTnom = b.id  and c.idPres = ".$idPres."   
                                     " ,Adapter::QUERY_MODE_EXECUTE);
       $datos=$result->toArray();
