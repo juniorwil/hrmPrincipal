@@ -59,9 +59,9 @@ class Gnominag extends AbstractTableGateway
    {
       if ($idEmp=='')// Se generan todos los empleados del grupo
       {
-         $result=$this->adapter->query("insert into n_nomina_e (idNom, idEmp, dias, idVac, actVac ) 
+         $result=$this->adapter->query("insert into n_nomina_e (idNom, idEmp, dias, idVac, actVac, sueldo ) 
            (select ".$id.' as id2, a.id, c.valor,
-              case when ( ( b.fechaI <= d.fechaI) or (d.fechaF <= b.fechaF ) ) then a.idVac else 0 end as idVac,a.vacAct  
+              case when ( ( b.fechaI <= d.fechaI) or (d.fechaF <= b.fechaF ) ) then a.idVac else 0 end as idVac,a.vacAct, a.sueldo   
               from a_empleados a inner join n_nomina b on b.idGrupo=a.idGrup and b.id= '.$id."       
               inner join n_tip_calendario c on c.id=b.idCal
               left join n_vacaciones d on d.id=a.idVac
@@ -443,7 +443,8 @@ where c.estado=0 and j.fechaI>='".$fechaI."' "
 
      $result=$this->adapter->query("select a.idNom,a.dias,b.id,b.horas,d.nombre,e.formula,d.tipo,d.valor,b.idCcos,b.devengado,b.deducido
                                         ,d.id as idCon,c.id as idEmp,d.idFor,b.horDias, a.diasVac 
-                                        from n_nomina_e a inner join n_nomina_e_d b on a.id=b.idInom
+                                        from n_nomina_e a 
+                                        inner join n_nomina_e_d b on a.id=b.idInom
                                         inner join a_empleados c on c.id=a.idEmp
                                         inner join n_conceptos d on d.id=b.idConc
                                         inner join n_formulas e on e.id=d.idFor

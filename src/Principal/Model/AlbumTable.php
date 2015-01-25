@@ -943,7 +943,7 @@ where a.estado=2 and e.idProc=6 and b.idEmp=".$idEmp ,Adapter::QUERY_MODE_EXECUT
    {
       $result=$this->adapter->query("select distinct c.nombre as nomCar, e.nombre as nomSed,b.vacantes,b.fecDoc,
                             f.cedula, f.nombre,  f.apellido , b.estado,
-                            e.nombre as nomSed      
+                            e.nombre as nomSed, b.salario       
                             from t_lista_cheq a 
                             inner join t_lista_cheq_d d on a.id=d.idCheq
                             inner join t_sol_con b on a.idSol=b.id
@@ -1232,5 +1232,12 @@ where a.estado=2 and e.idProc=6 and b.idEmp=".$idEmp ,Adapter::QUERY_MODE_EXECUT
       $datos=$result->toArray();
       return $datos;
    }                         
+   // Programacion
+   public function getPrograma($con)
+   {
+      $result=$this->adapter->query("select *, year(fecDoc) as ano,month(fecDoc) as mes,day(fecDoc) as dia from t_programa".$con ,Adapter::QUERY_MODE_EXECUTE);
+      $datos=$result->toArray();
+      return $datos;
+   }                            
 }
 

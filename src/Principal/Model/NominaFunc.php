@@ -300,7 +300,14 @@ values (".$idn.",".$iddn.",".$idCon.",".$idCcos.",".$horas.",".$tipn.",".$dev.",
        
        return $valores; 
 
-    } // Fin guardar formula en novedades           
+   } // Fin guardar formula en novedades   
+   // 
+   public function getNove($idNom, $idEmp ,$diasLab, $diasVac ,$horas ,$formula ,$tipo ,$idCcos ,
+                             $idCon, $ac, $tipn,$dev,$ded,$idfor,$diasLabC,$idCpres,$calc,$conVac,$obId)
+   { 
+
+   }
+
    // Busqueda de variables dentro de la formula para validar funciones de busqueda
    public function getVarForm($cadena)
    {

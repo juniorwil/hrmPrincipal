@@ -253,6 +253,29 @@ class Formulario extends Form
                 'id'    => 'numero'
             ),
         ));        
+        // NUMERO GENERICO 1
+        $this->add(array(
+            'name' => 'numero1',
+            'attributes' => array(
+                'type'  => 'text',
+            ),
+            'options' => array(
+                'label' => 'Numero',
+                'id'    => 'numero'
+            ),
+        ));        
+        // NUMERO GENERICO 2
+        $this->add(array(
+            'name' => 'numero2',
+            'attributes' => array(
+                'type'  => 'text',
+            ),
+            'options' => array(
+                'label' => 'Numero',
+                'id'    => 'numero'
+            ),
+        ));        
+
         // AÑOS
         $this->add(array(
             'name' => 'ano',
@@ -550,7 +573,7 @@ class Formulario extends Form
             'name' => 'generarM',
             'attributes' => array(
                 'type'  => 'submit',
-                'value' => 'Generar plan',
+                'value' => 'Generar',
                 'id' => 'generarnom',
                 'class' => 'btn btn-mini btn-info'
             ),
@@ -562,6 +585,26 @@ class Formulario extends Form
                 'type'  => 'submit',
                 'value' => 'Buscar',
                 'id' => 'submitbutton',
+                'class' => 'btn btn-white btn-info btn-bold'
+            ),
+        ));        
+        // BUSCAR 2
+        $this->add(array(
+            'name' => 'agregar2',
+            'attributes' => array(
+                'type'  => 'submit',
+                'value' => 'Agregar',
+                'id' => 'agregar2',
+                'class' => 'btn btn-white btn-info btn-bold'
+            ),
+        ));        
+        // GUARDAR
+        $this->add(array(
+            'name' => 'guardar',
+            'attributes' => array(
+                'type'  => 'submit',
+                'value' => 'Guardar',
+                'id' => 'guardar',
                 'class' => 'btn btn-white btn-info btn-bold'
             ),
         ));        
@@ -1428,6 +1471,19 @@ class Formulario extends Form
                 'label' => 'Fecha de ingreso'
             ),            
         ));  
+        // FECHA DE INGRESO 2
+        $this->add(array(
+            'name' => 'fecIng2',            
+            'attributes' => array(
+                'type'  => 'Date',
+                'id'   => 'fecIng2',
+                'class'  => 'form-control',
+            ),
+            'options' => array(
+                'label' => 'Fecha de ingreso'
+            ),            
+        ));  
+
          // MESES
         $select = new Element\Select('meses');
         $select->setAttribute('multiple', false);
