@@ -83,12 +83,15 @@ class Gnominag extends AbstractTableGateway
          $result=$this->adapter->query("insert into n_nomina_e_i (idNom, idEmp, idInc, dias, diasAp, diasDp, reportada) 
 ( select a.id, b.idEmp, c.id as idInc, ( DATEDIFF( c.fechaf, c.fechai ) +1 ) as diasI, # Dias totales de incapacidad
 
-  # CUANDO LA INCAPACIDAD ESTA POR DEBAJO DEL PERIODO INICIAL DE NOMINA ----------------------------------
+   # CUANDO LA INCAPACIDAD ESTA POR DEBAJO DEL PERIODO INICIAL DE NOMINA ----------------------------------
+case when d.incAtrasada = 1 then 
 case when ( ( c.fechai < a.fechaI) and ( c.fechaf < a.fechaI )  )
   then ( DATEDIFF( c.fechaf , c.fechai ) + 1 ) else 
      case when ( ( c.fechai < a.fechaI) and ( c.fechaf >= a.fechaI )  ) 
-	    then ( DATEDIFF( a.fechaI , c.fechai ) ) else 0 end 
-	  end as diasAp, # Dias no reportados antes de periodo
+      then ( DATEDIFF( a.fechaI , c.fechai ) ) else 0 end 
+    end 
+ else 0 end     
+    as diasAp, # Dias no reportados antes de periodo
 	  
   # CUANDO LA INCAPACIDAD TIENE PERIODO SUPERIOR AL PERIODO INICIAL DE NOMINA ----------------------------------
 case when ( ( c.fechai >= a.fechaI) and ( c.fechaf <= a.fechaF) )
@@ -103,7 +106,8 @@ case when ( ( c.fechai >= a.fechaI) and ( c.fechaf <= a.fechaF) )
 from n_nomina a 
 inner join n_nomina_e b on b.idNom = a.id
 inner join n_incapacidades c on c.reportada in ('0','1')  and c.idEmp = b.idEmp #  Se cargan todas las incapacidades antes de fin del perioso en cuestio
-where a.id = ".$id." and ( (c.fechai <= a.fechaF) and (c.fechaf >= a.fechaI ) )   )   ",Adapter::QUERY_MODE_EXECUTE);
+left join c_general d on d.id = 1 # Buscar datos de la confguracion general para incapaciades 
+where a.id = ".$id."   )   ",Adapter::QUERY_MODE_EXECUTE);
     }    
    // ( POR TIPO DE AUTOMATICOS ) ( n_nomina_e_d ) 
    public function getNominaEtau($id,$idg)
@@ -239,17 +243,18 @@ where a.id = ".$id." and ( (c.fechai <= a.fechaF) and (c.fechaf >= a.fechaI ) ) 
     {        
       $result=$this->adapter->query('select distinct c.idNom, c.id, a.idCon, f.formula,c.dias,e.tipo,a.idEmp,   
                 case a.cCosEmp when 0 then a.idCcos
-                  when 1 then g.idCcos  End as idCcos, 
+                  when 1 then g.idCcos  End as idCcos, # Centros de costos
                 case a.horasCal when 0 then 0 
-                  when 1 then (c.dias*'.$this->horasDias.') End as horas, 1, 
+                  when 1 then (c.dias*8) End as horas, 1, # Horas desrrollo
                 case when e.valor=2 then 
-                     case when e.tipo = 1 then a.valor else 0 End				                      
-                when e.valor=1 then 0      
-                End as dev,       
-                case when e.valor=2 then 
-                     case when e.tipo = 2 then a.valor else 0 End				                                      
+                case when e.tipo = 1 then a.valor else 0 End                              
+                  when e.valor=1 then 0      
+                End as dev,  # Devengado
+                 ( case when e.valor=2 then 
+                     case when e.tipo = 2 then a.valor else 0 End                                             
                 when e.valor=1 then 0
-		 		End as ded, e.idFor, c.diasVac, hh.codigo as nitTer      
+        End ) / cal.valor  as ded  , # Deducido 
+         e.idFor, c.diasVac, hh.codigo as nitTer, c.diasVac       
 from n_emp_conc a 
 inner join n_nomina_e c on a.idEmp=c.idEmp 
 inner join n_nomina d on d.id=c.idNom
@@ -258,6 +263,7 @@ inner join n_formulas f on f.id=e.idFor
 inner join a_empleados g on g.id=c.idEmp
 left join n_terceros_s h on h.id = e.idTer  
 left join n_terceros hh on hh.id = h.idTer 
+inner join n_tip_calendario cal on cal.id = d.idCal 
 WHERE not exists (SELECT null from n_nomina_e_d 
 where c.id=idInom and a.idCon=idConc and a.idCcos=idCcos and tipo=2 )
 and d.estado=0 and c.idNom='.$id.' and c.actVac = 0 ',Adapter::QUERY_MODE_EXECUTE);
@@ -646,7 +652,8 @@ end as diasAus ,a.fechai , a.fechaf, c.fechaI, c.fechaF, a.idEmp
       {
        $mes = $mes + ( $ano * 12 ); // Pasar los años a meses    
        $result=$this->adapter->query("select b.id, b.idEmp ,0 as dias,c.idCcos, 
-             c.fecing, DATE_ADD( c.fecing , interval ".$mes." month) , c.CedEmp , c.nombre , c.idTemp, case when e.id > 0 then 1 else 0 end as pg  
+             c.fecing , DATE_ADD( c.fecing , interval ".$mes." month) , c.CedEmp , c.nombre , c.idTemp, case when e.id > 0 then 1 else 0 end as pg,  
+             case when (day( d.fecha) >= day(a.fechaI)) and (day( d.fecha) <= day(a.fechaF)) then 1 else 0 end as diaI   
              from n_nomina a
              inner join n_nomina_e b on b.idNom = a.id
              inner join a_empleados c on c.id = b.idEmp 
@@ -659,7 +666,8 @@ end as diasAus ,a.fechai , a.fechaf, c.fechaI, c.fechaF, a.idEmp
              order by c.fecing desc",Adapter::QUERY_MODE_EXECUTE);		             
       }else{
        $result=$this->adapter->query("select b.id, b.idEmp ,0 as dias,c.idCcos, 
-             c.fecing, DATE_ADD( c.fecing , interval ".$ano." year) , c.CedEmp , c.nombre , c.idTemp, case when e.id > 0 then 1 else 0 end as pg  
+             c.fecing , day( d.fecha ) as diaI, DATE_ADD( c.fecing , interval ".$ano." year) , c.CedEmp , c.nombre , c.idTemp, case when e.id > 0 then 1 else 0 end as pg,
+             case when (day( d.fecha) >= day(a.fechaI)) and (day( d.fecha) <= day(a.fechaF)) then 1 else 0 end as diaI                  
              from n_nomina a
              inner join n_nomina_e b on b.idNom = a.id
              inner join a_empleados c on c.id = b.idEmp 
@@ -679,7 +687,8 @@ end as diasAus ,a.fechai , a.fechaf, c.fechaI, c.fechaF, a.idEmp
    {                        
        $result=$this->adapter->query("select b.id, b.idEmp ,0 as dias,c.idCcos, 
              c.fecing, ( DATE_FORMAT( a.fechaF  , '%Y-%m-%d' ) - DATE_FORMAT( d.fecha , '%Y-%m-%d' ) ) 
-				 , c.CedEmp , c.nombre , c.idTemp , case when e.id > 0 then 1 else 0 end as pg 
+				 , c.CedEmp , c.nombre , c.idTemp , case when e.id > 0 then 1 else 0 end as pg, 
+             case when (day( d.fecha) >= day(a.fechaI)) and (day( d.fecha) <= day(a.fechaF)) then 1 else 0 end as diaI   
              from n_nomina a
              inner join n_nomina_e b on b.idNom = a.id
              inner join a_empleados c on c.id = b.idEmp 
