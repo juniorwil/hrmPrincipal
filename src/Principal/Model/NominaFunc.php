@@ -43,7 +43,8 @@ class NominaFunc extends AbstractTableGateway
    public $salarioMinimo;
    public $horasDias;
    public $salarioMinimoCovencional;
-     
+   public $subsidioTransporte;
+
    public function __construct(Adapter $adapter)
    {
         $this->adapter = $adapter;
@@ -57,7 +58,10 @@ class NominaFunc extends AbstractTableGateway
         $this->horasDias=$dp['valorNum'];// Horas dia de trabajo
 
         $dp = $pn->getGeneral1(3);
-        $this->salarioMinimoCovencional=$dp['formula'];// Salario minimo convencional        
+        $this->salarioMinimoCovencional=$dp['formula'];// Salario minimo convencional   
+
+        $dp = $pn->getGeneral1(11);
+        $this->subsidioTransporte=$dp['valorNum']; // Subsidio de trasnporte    
    }
    // 0. FUNCION GENERAL PARA CALCULOS EN NOMINA
    public function getNomina($idn, $iddn, $idin, $ide ,$diasLab, $diasVac ,$horas ,$formula ,$tipo ,$idCcos ,
@@ -418,7 +422,7 @@ where c.idProc=1 and a.idNom=".$id." and e.id=".$idEmp ,Adapter::QUERY_MODE_EXEC
    public function getSubsidio($id)
    {
       $result=$this->adapter->query("Select 
-case when ( e.sueldo < (2*".$this->salarioMinimo.") ) then 72000/2
+case when ( e.sueldo < (2*".$this->salarioMinimo.") ) then ".$this->subsidioTransporte."/2
 	  else 0  
 end as valor  
 from  n_nomina_e_d a 
@@ -467,7 +471,7 @@ where c.idProc=1 and  a.idInom=".$id,Adapter::QUERY_MODE_EXECUTE);
       // Sumar todos los conceptos que hagan parte del sueldo 122 = Concepto de sueldo
       $result=$this->adapter->query("Select  
 case when ( sum( case when a.idConc!=122 then a.devengado else e.sueldo end ) < (2*".$this->salarioMinimo.") ) 
-then 36000/15 
+then ( (".$this->subsidioTransporte."/2) / 30 )
 	  else 0  
 end as valor  
 from  n_nomina_e_d a 

@@ -107,7 +107,7 @@ from n_nomina a
 inner join n_nomina_e b on b.idNom = a.id
 inner join n_incapacidades c on c.reportada in ('0','1')  and c.idEmp = b.idEmp #  Se cargan todas las incapacidades antes de fin del perioso en cuestio
 left join c_general d on d.id = 1 # Buscar datos de la confguracion general para incapaciades 
-where a.id = ".$id."   )   ",Adapter::QUERY_MODE_EXECUTE);
+where a.id = ".$id." and ( (c.fechai <= a.fechaF) and (c.fechaf >= a.fechaI ) )   )   ",Adapter::QUERY_MODE_EXECUTE);
     }    
    // ( POR TIPO DE AUTOMATICOS ) ( n_nomina_e_d ) 
    public function getNominaEtau($id,$idg)
@@ -357,7 +357,8 @@ and d.estado=0 and c.idNom='.$id.' and c.actVac = 0 ',Adapter::QUERY_MODE_EXECUT
 				 case when j.id >0 then ( (cc.valCuota / i.valor ) * ( a.dias + j.diasCal ) )  else 
 				 cc.valCuota end as valor, 
 				 cc.cuotas, cc.valCuota, 
-                                 case when kk.codigo is null then "" else kk.codigo end as nitTer  
+         case when kk.codigo is null then "" else kk.codigo end as nitTer,
+         case when np.valor is null then 0 else np.valor end as valorPresN    
 				 from n_nomina_e a 
              inner join n_nomina b on b.id=a.idNom
              inner join n_prestamos c on c.idEmp=a.idEmp 
@@ -367,9 +368,10 @@ and d.estado=0 and c.idNom='.$id.' and c.actVac = 0 ',Adapter::QUERY_MODE_EXECUT
              inner join n_formulas g on g.id=f.idFor 
              inner join a_empleados h on h.id=a.idEmp 
              inner join n_tip_calendario i on i.id = b.idCal 
-	       left join n_vacaciones j on j.id=a.idVac
+	           left join n_vacaciones j on j.id=a.idVac
              left join n_terceros_s k on k.id = f.idTer
-     		 left join n_terceros kk on kk.id = k.idTer                                   
+     		     left join n_terceros kk on kk.id = k.idTer                                   
+             left join n_nomina_pres np on np.idPres = cc.id and np.fechaI = b.fechaI and np.fechaF = b.fechaF and np.estado=0 # Buscar cambios en nomina activa con el prestamo
              where a.idNom='.$id.' and c.estado=1 and a.idEmp='.$idEmp." and ( cc.pagado + cc.saldoIni ) < cc.valor group by c.id" ,Adapter::QUERY_MODE_EXECUTE);
       $datos=$result->toArray();
       return $datos;       
@@ -448,7 +450,7 @@ where c.estado=0 and j.fechaI>='".$fechaI."' "
      // $tipo  : tipo ('1','2','3')
 
      $result=$this->adapter->query("select a.idNom,a.dias,b.id,b.horas,d.nombre,e.formula,d.tipo,d.valor,b.idCcos,b.devengado,b.deducido
-                                        ,d.id as idCon,c.id as idEmp,d.idFor,b.horDias, a.diasVac 
+                                        ,d.id as idCon,c.id as idEmp,d.idFor,b.horDias, a.diasVac, b.saldoPact, b.idCpres   
                                         from n_nomina_e a 
                                         inner join n_nomina_e_d b on a.id=b.idInom
                                         inner join a_empleados c on c.id=a.idEmp
@@ -458,7 +460,22 @@ where c.estado=0 and j.fechaI>='".$fechaI."' "
       $datos=$result->toArray();
       return $datos;     
     }        
-    
+   // Numero de novedades por empleado de acuerdo al tipo
+   public function getDocNoveN($idn,$con)
+   {        
+     // $id    : Id documento de novedades
+     // $tipo  : tipo ('1','2','3')
+
+     $result=$this->adapter->query("select count(b.id) as num   
+                                        from n_nomina_e a 
+                                        inner join n_nomina_e_d b on a.id=b.idInom
+                                        inner join a_empleados c on c.id=a.idEmp
+                                        inner join n_conceptos d on d.id=b.idConc
+                                        inner join n_formulas e on e.id=d.idFor
+                                        where b.idInom=".$idn." ".$con." order by d.tipo " ,Adapter::QUERY_MODE_EXECUTE);
+      $datos=$result->current();
+      return $datos;     
+    }            
    // ( REGISTRO DE VACACIONES ) ( n_vacaciones ) 
    public function getVacacionesG($id)
    {        
