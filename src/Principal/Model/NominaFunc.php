@@ -52,7 +52,7 @@ class NominaFunc extends AbstractTableGateway
         // Parametros de nomina para funciones de consulta 
         $pn = new Paranomina($this->adapter);
         $dp = $pn->getGeneral1(1);
-        $this->salarioMinimo=$dp['formula'];// Salario minimo
+        $this->salarioMinimo=$dp['valorNum'];// Salario minimo
 
         $dp = $pn->getGeneral1(2);
         $this->horasDias=$dp['valorNum'];// Horas dia de trabajo
@@ -259,8 +259,8 @@ values (".$idn.",".$iddn.",".$idCon.",".$idCcos.",".$horas.",".$tipn.",".$dev.",
 	   
 	   
        $smlc = $this->salarioMinimoCovencional; 
-       $sml  = $this->salarioMinimo;       
-       
+       $smlv = $this->salarioMinimo;       
+
        // PROCESOS ESPECIALES EMPRESAS       
        $difSueldo  =  0;             
        $dat     =  $this->getDiferenciaSueldo($ide, $iddn);  // Diferencia en sueldo empleados
@@ -469,18 +469,30 @@ where c.idProc=1 and  a.idInom=".$id,Adapter::QUERY_MODE_EXECUTE);
    public function getSubTrans($id)
    {
       // Sumar todos los conceptos que hagan parte del sueldo 122 = Concepto de sueldo
-      $result=$this->adapter->query("Select  
-case when ( sum( case when a.idConc!=122 then a.devengado else e.sueldo end ) < (2*".$this->salarioMinimo.") ) 
-then ( (".$this->subsidioTransporte."/2) / 30 )
-	  else 0  
-end as valor  
-from  n_nomina_e_d a 
-inner join n_conceptos b on a.idConc=b.id 
-inner join n_conceptos_pr c on c.idConc=b.id 
-inner join n_nomina_e d on d.id=a.idInom
-inner join a_empleados e on e.id=d.idEmp
-where c.idProc = 2 and  a.idInom =".$id,Adapter::QUERY_MODE_EXECUTE);
-					 
+
+      $result=$this->adapter->query("Select 
+     case when (
+          ( ( e.sueldo/2 ) +
+       case when c.idProc = 2 then sum( a.devengado ) 
+           else 0 end ) < ".$this->salarioMinimo." ) then ( ( ".$this->subsidioTransporte." )/ 30 ) else 0 end as valor   
+        from n_nomina_e_d a 
+            inner join n_conceptos b on a.idConc=b.id 
+            inner join n_conceptos_pr c on c.idConc=b.id 
+            inner join n_nomina_e d on d.id=a.idInom
+            inner join a_empleados e on e.id=d.idEmp
+            where a.idInom =".$id,Adapter::QUERY_MODE_EXECUTE);
+//      $result=$this->adapter->query("Select  
+//case when ( sum( case when a.idConc!=122 then a.devengado else e.sueldo end ) < (2*".$this->salarioMinimo.") ) 
+//then ( (".$this->subsidioTransporte.") / 30 )
+    //else 0  
+//end as valor  
+//from  n_nomina_e_d a 
+//inner join n_conceptos b on a.idConc=b.id 
+//inner join n_conceptos_pr c on c.idConc=b.id 
+//inner join n_nomina_e d on d.id=a.idInom
+//inner join a_empleados e on e.id=d.idEmp
+//where c.idProc = 2 and  a.idInom =".$id,Adapter::QUERY_MODE_EXECUTE);
+
      // $result=$this->adapter->query("select case when ( sueldo < (2*".$this->salarioMinimo.") ) then 36000/15
 	 //            else 0 end as valor   
        //              from a_empleados where id=".$id,Adapter::QUERY_MODE_EXECUTE);					 

@@ -78,36 +78,52 @@ class Gnominag extends AbstractTableGateway
       }      
     }
    // Generacion de incapacidades para empleados
-   public function getIncapaEmp($id)
+   public function getIncapaEmp($id, $tabla)
    {
-         $result=$this->adapter->query("insert into n_nomina_e_i (idNom, idEmp, idInc, dias, diasAp, diasDp, reportada) 
+      $tipo=0;
+      if ( $tabla=='n_incapacidades' )
+         $tipo=0;
+      else 
+         $tipo=1;
+
+         $result=$this->adapter->query("insert into n_nomina_e_i (idNom, idEmp, idInc, dias, diasAp, diasDp, reportada, tipo) 
 ( select a.id, b.idEmp, c.id as idInc, ( DATEDIFF( c.fechaf, c.fechai ) +1 ) as diasI, # Dias totales de incapacidad
 
    # CUANDO LA INCAPACIDAD ESTA POR DEBAJO DEL PERIODO INICIAL DE NOMINA ----------------------------------
-case when d.incAtrasada = 1 then 
+( case when d.incAtrasada = 1 then 
 case when ( ( c.fechai < a.fechaI) and ( c.fechaf < a.fechaI )  )
   then ( DATEDIFF( c.fechaf , c.fechai ) + 1 ) else 
      case when ( ( c.fechai < a.fechaI) and ( c.fechaf >= a.fechaI )  ) 
       then ( DATEDIFF( a.fechaI , c.fechai ) ) else 0 end 
     end 
- else 0 end     
+ else 0 end )    
     as diasAp, # Dias no reportados antes de periodo
-	  
+    
   # CUANDO LA INCAPACIDAD TIENE PERIODO SUPERIOR AL PERIODO INICIAL DE NOMINA ----------------------------------
-case when ( ( c.fechai >= a.fechaI) and ( c.fechaf <= a.fechaF) )
-  then ( DATEDIFF( c.fechaf , c.fechai )+1 ) else 
-    case when ( ( c.fechai < a.fechaI) and ( c.fechaf >= a.fechaI) ) 
-	       then 
-			    case when ( ( DATEDIFF( c.fechaf, a.fechaI )+1 ) > 15 ) then  15  else 
-			    ( DATEDIFF( c.fechaf, a.fechaI )+1 ) # pasa de periodo a periodo y se de tomar la fecha inicio de nomina menos la fecha fin dincapacidad
-			 end    
-	    else 0 end 
-	  end as diasDp, c.reportada # Dias no reportados despues del periodo 	  	  
+case when ( ( c.fechai >= a.fechaI) and ( c.fechaf <= a.fechaF) ) # Incapacidad dentro del periodo
+  then ( DATEDIFF( c.fechaf , c.fechai )+1 )
+  else 
+    case when ( ( c.fechai <= a.fechaI) and ( c.fechaf >= a.fechaI) ) # Incapacidad antes y despues del periodo de nomina
+         then 
+          case when ( ( DATEDIFF( c.fechaf, a.fechaI )+1 ) > 15 ) then 
+            15  
+         else 
+            ( DATEDIFF( c.fechaf, a.fechaI )+1 ) # pasa de periodo a periodo y se de tomar la fecha inicio de nomina menos la fecha fin dincapacidad
+       end    
+      else 
+        case when ( ( c.fechai >= a.fechaI) and ( c.fechaf >= a.fechaF) )  then # Inicia en el periodo y pasa al otro periodo de nomina
+           ( DATEDIFF( a.fechaF, c.fechai )+1 )
+        else 0 end  
+      end 
+    end as diasDp,
+     c.reportada, # Dias no reportados despues del periodo        
+     ".$tipo."  
 from n_nomina a 
 inner join n_nomina_e b on b.idNom = a.id
-inner join n_incapacidades c on c.reportada in ('0','1')  and c.idEmp = b.idEmp #  Se cargan todas las incapacidades antes de fin del perioso en cuestio
+inner join ".$tabla." c on c.reportada in ('0','1')  and c.idEmp = b.idEmp #  Se cargan todas las incapacidades antes de fin del perioso en cuestio
 left join c_general d on d.id = 1 # Buscar datos de la confguracion general para incapaciades 
-where a.id = ".$id." and ( (c.fechai <= a.fechaF) and (c.fechaf >= a.fechaI ) )   )   ",Adapter::QUERY_MODE_EXECUTE);
+where a.id = ".$id."    )   ",Adapter::QUERY_MODE_EXECUTE);
+//and ( (c.fechai <= a.fechaF) and (c.fechaf >= a.fechaI ) ) ## OJOA ANALIZAR ESTO DE LA MEJR FORMA 
     }    
    // ( POR TIPO DE AUTOMATICOS ) ( n_nomina_e_d ) 
    public function getNominaEtau($id,$idg)
@@ -382,7 +398,8 @@ and d.estado=0 and c.idNom='.$id.' and c.actVac = 0 ',Adapter::QUERY_MODE_EXECUT
      $result=$this->adapter->query('select distinct a.id, a.idEmp,0 as dias,0 as horas, 0 as formula, f.tipo, h.idCcos,
              e.idConE as idCon, f.idFor, cc.id as idPres, 1 as cuota, 
 				 ( (cc.valCuota / i.valor ) * ( a.dias ) )  as valor,
-                                 case when kk.codigo is null then "" else kk.codigo end as nitTer 
+                                 case when kk.codigo is null then "" else kk.codigo end as nitTer ,
+                                 case when np.valor is null then 0 else np.valor end as valorPresN  
 				 from n_nomina_e a 
              inner join n_nomina b on b.id=a.idNom
              inner join n_prestamos c on c.idEmp=a.idEmp 
@@ -393,7 +410,8 @@ and d.estado=0 and c.idNom='.$id.' and c.actVac = 0 ',Adapter::QUERY_MODE_EXECUT
              inner join a_empleados h on h.id=a.idEmp 
              inner join n_tip_calendario i on i.id = b.idCal 
              left join n_terceros_s k on k.id = f.idTer
-     		 left join n_terceros kk on kk.id = k.idTer                                
+     		     left join n_terceros kk on kk.id = k.idTer    
+             left join n_nomina_pres np on np.idPres = cc.id and np.fechaI = b.fechaI and np.fechaF = b.fechaF and np.estado=0 # Buscar cambios en nomina activa con el prestamo                               
              where a.idNom='.$id.' and c.estado=1 and a.idEmp='.$idEmp." and ( cc.pagado + cc.saldoIni ) < cc.valor group by c.id" ,Adapter::QUERY_MODE_EXECUTE);
       $datos=$result->toArray();
       return $datos;       
@@ -525,10 +543,10 @@ where c.estado=0 and j.fechaI>='".$fechaI."' "
           e.dias as diasEnt , e.nombre, b.reportada     
            from n_nomina_e a
             inner join n_nomina_e_i b on b.idEmp = a.idEmp and b.idNom = a.idNom 
-            inner join n_incapacidades c on c.id = b.idInc
+            left join n_incapacidades c on c.id = b.idInc
             inner join n_nomina d on d.id = b.idNom 
-            inner join n_tipinc e on e.id = c.idInc 
-            where a.idNom = ".$id."   
+            left join n_tipinc e on e.id = c.idInc 
+            where a.idNom = ".$id." 
             group by a.idEmp 
             order by a.idEmp ",Adapter::QUERY_MODE_EXECUTE);
       //$datos = $result->current();
@@ -600,12 +618,43 @@ end as diasAus ,a.fechai , a.fechaf, c.fechaI, c.fechaF, a.idEmp
                 inner join n_formulas f on f.id=e.idFor
                 inner join a_empleados g on g.id=a.idEmp
                 inner join n_nomina_e h on h.idEmp = a.idEmp and h.idNom = a.idNom   
-                where a.idNom = ".$id." 
+                where a.idNom = ".$id." and a.tipo = 0 
                 order by a.idEmp",Adapter::QUERY_MODE_EXECUTE);       
    
       $datos=$result->toArray();
       return $datos;
     }                 
+   // INCAPACIDADES POR PROROGAS NOMINA ( n_nomina_e_d ) 
+   public function getIncaPpNom($id)
+   {
+      $result=$this->adapter->query("select h.id, a.idEmp, a.idEmp, d.idConc as idCon,0 as dias,
+                f.formula , e.tipo, g.idCcos , e.idFor, a.diasAp, a.diasDp,
+           case when ( ( a.diasAp + a.diasDp ) >= (c.dias - 1) )# Dias inicio pago empreasa
+             then ( c.dias - 1) else ( a.diasAp + a.diasDp ) end as diasEmp,              
+             # Se buscan dias anteriores reportados o no reportados 
+          case when a.reportada = 1 then    
+            case when ( ( a.diasDp ) > (c.dias - 1) )# Dias inicio pago entidad
+               then ( ( a.diasDp ) - ( c.dias - 1 ) ) else 0 end 
+          else 
+            case when ( ( a.diasAp + a.diasDp ) > (c.dias - 1) )# Dias inicio pago entidad
+               then ( ( a.diasAp + a.diasDp ) - ( c.dias - 1 ) ) else 0 end 
+          end  as diasEnt,             
+               d.tipo as tipInc, b.id as idInc        
+                from n_nomina_e_i a 
+                inner join n_incapacidades_pro b on b.id=a.idInc 
+                inner join n_incapacidades bp on bp.id = b.idInc 
+                inner join n_tipinc c on c.id=bp.idInc
+                inner join n_tipinc_c d on d.idTinc=c.id 
+                inner join n_conceptos e on e.id=d.idConc
+                inner join n_formulas f on f.id=e.idFor
+                inner join a_empleados g on g.id=a.idEmp
+                inner join n_nomina_e h on h.idEmp = a.idEmp and h.idNom = a.idNom   
+                where a.idNom = ".$id."  and a.tipo = 1 
+                order by a.idEmp",Adapter::QUERY_MODE_EXECUTE);       
+   
+      $datos=$result->toArray();
+      return $datos;
+    }                     
    // ( POR AUSENTISMOS ) 
    public function getNominaAus($id)
    {        

@@ -628,6 +628,16 @@ class Formulario extends Form
                 'class' => 'btn btn-primary'
             ),
         ));   
+        // COMFIRMAR
+        $this->add(array(
+            'name' => 'confirmar',
+            'attributes' => array(
+                'type'  => 'submit',
+                'value' => 'Confirmar',
+                'id' => 'confirmar',
+                'class' => 'btn btn-white btn-purple'
+            ),
+        ));                
         // CHECK 1
         $this->add(array(
            'type' => 'Checkbox',

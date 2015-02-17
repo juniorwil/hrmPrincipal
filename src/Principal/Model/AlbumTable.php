@@ -1239,5 +1239,25 @@ where a.estado=2 and e.idProc=6 and b.idEmp=".$idEmp ,Adapter::QUERY_MODE_EXECUT
       $datos=$result->toArray();
       return $datos;
    }                            
+   // Escala salaria para documento de modificacion
+   public function getDocEscala($id)
+   {
+      $result=$this->adapter->query("select a.*, 
+                         b.porInc, b.salarioNue 
+                             from n_salarios a 
+                             left join n_asalarial_d b on b.idEsal=a.id and b.idAsal = ".$id." order by a.salario" ,Adapter::QUERY_MODE_EXECUTE);
+      $datos=$result->toArray();
+      return $datos;
+   }                               
+   // Sueldos para documento de modificacion
+   public function getDocEscalaS($id)
+   {
+      $result=$this->adapter->query("select distinct a.sueldo as salario, '' as codigo , b.porInc, b.salarioNue 
+                               from a_empleados a  
+                                  left join n_asalarial_d b on TRUNCATE(b.salarioAct,0) = TRUNCATE(a.sueldo,0) and b.idAsal = ".$id."  
+                                  where a.activo=0 order by a.sueldo" ,Adapter::QUERY_MODE_EXECUTE);
+      $datos=$result->toArray();
+      return $datos;
+   }                                  
 }
 
